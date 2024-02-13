@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="DictMapper">
+	
+	<resultMap type="Dict" id="dictResultMap">
+		<id column="DICT_ID" property="DICT_ID"/>
+		<result column="NAME" property="NAME"/>
+		<result column="ORDER_BY" property="ORDER_BY"/>
+		<result column="PARENT_ID" property="PARENT_ID"/>
+	</resultMap>
+	
+	<!--表名 -->
+	<sql id="tableName">
+		B_DICT
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		NAME,
+		NAME_EN,
+		BIANMA,
+		ORDER_BY,
+		PARENT_ID,
+		BZ,
+		TBSNAME,
+		STATUS,
+		DICT_ID,
+		CORP_ID
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{NAME},
+		#{NAME_EN},
+		#{BIANMA},
+		#{ORDER_BY},
+		#{PARENT_ID},
+		#{BZ},
+		#{TBSNAME},
+		#{STATUS},
+		#{DICT_ID},
+		#{CORP_ID}
+	</sql>
+	
+	<!-- 新增-->
+	<insert id="save" parameterType="pd">
+		insert into 
+	<include refid="tableName"></include>
+		(
+	<include refid="Field"></include>
+		) values (
+	<include refid="FieldValue"></include>
+		)
+	</insert>
+	
+	<!-- 删除-->
+	<delete id="delete" parameterType="pd">
+		delete from
+		<include refid="tableName"></include>
+		where 
+			DICT_ID = #{DICT_ID}
+	</delete>
+	
+	<!-- 修改 -->
+	<update id="edit" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+		set 
+			NAME = #{NAME},
+			NAME_EN = #{NAME_EN},
+			ORDER_BY = #{ORDER_BY},
+			BZ = #{BZ},
+			BIANMA = #{BIANMA},
+			TBSNAME = #{TBSNAME},
+            STATUS = #{STATUS},
+			DICT_ID = DICT_ID
+		where 
+			DICT_ID = #{DICT_ID}
+	</update>
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="pd" resultType="pd">
+		select 
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 1=1
+		<if test="CORP_ID != null and CORP_ID != ''">
+			AND CORP_ID = #{CORP_ID}
+		</if>
+			AND DICT_ID = #{DICT_ID}
+	</select>
+	
+	<!-- 通过编码获取数据 -->
+	<select id="findByBianma" parameterType="pd" resultType="pd">
+		select 
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 1=1
+        <if test="CORP_ID != null and CORP_ID != ''">
+            AND CORP_ID = #{CORP_ID}
+        </if>
+        AND PARENT_ID = #{DICT_ID}
+        AND BIANMA = #{BIANMA}
+	</select>
+	
+	<!-- 列表 -->
+	<select id="datalistPage" parameterType="page" resultType="pd">
+		select
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where
+			1=1
+		<if test="pd.CORP_ID != null and pd.CORP_ID != ''">
+			and CORP_ID = #{pd.CORP_ID}
+		</if>
+		<if test="pd.DICT_ID!= null and pd.DICT_ID != ''"><!-- 检索 -->
+		and PARENT_ID = #{pd.DICT_ID}
+		</if>
+        and STATUS = '0'
+		<if test="pd.keywords != null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+				(
+				 NAME LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+				 or 
+				 NAME_EN LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') 
+				 or
+				 BIANMA LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+				)
+		</if>
+		order by ORDER_BY
+	</select>
+
+    <!-- 列表,返回所有 -->
+    <select id="datalist" parameterType="pd" resultType="pd">
+        select
+        <include refid="Field"></include>
+        from
+        <include refid="tableName"></include>
+        where
+        1=1
+        <if test="CORP_ID != null and CORP_ID != ''">
+            and CORP_ID = #{CORP_ID}
+        </if>
+        <if test="DICT_ID!= null and DICT_ID != ''"><!-- 检索 -->
+            and PARENT_ID = #{DICT_ID}
+        </if>
+    <!-- and STATUS = '0' -->
+    order by ORDER_BY
+</select>
+<!-- 列表,返回所有BIANMA和Name字段,只为控件显示用 -->
+    <select id="datalistcontrols" parameterType="pd" resultType="pd">
+        select
+          NAME,
+          BIANMA
+        from
+        <include refid="tableName"></include>
+        where
+        1=1
+        <if test="CORP_ID != null and CORP_ID != ''">
+            and CORP_ID = #{CORP_ID}
+        </if>
+        <if test="DICT_ID!= null and DICT_ID != ''"><!-- 检索 -->
+            and PARENT_ID = #{DICT_ID}
+        </if>
+        and STATUS = '0'
+        order by ORDER_BY
+    </select>
+
+    <!-- 通过ID获取其子级列表 -->
+	<select id="listSubDictByParentId" parameterType="String" resultMap="dictResultMap">
+		select 
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 
+			PARENT_ID = #{parentId}
+            and STATUS = '0'
+        order by ORDER_BY
+	</select>
+	
+	<!-- 排查表检查是否被占用 -->
+	<select id="findFromTbs" parameterType="pd" resultType="pd">
+		select
+			count(*) zs
+		from 
+			${thisTable}
+		where
+			BIANMA = #{BIANMA}
+	</select>
+
+    <!-- 获取父类编码下最大的排序号 -->
+    <select id="findMaxSortNo" parameterType="pd" resultType="pd">
+        select max(ORDER_BY) as ORDER_BY
+        from   <include refid="tableName"></include>
+        where 1=1
+        <if test="CORP_ID != null and CORP_ID != ''">
+            AND CORP_ID = #{CORP_ID}
+        </if>
+        AND PARENT_ID = #{DICT_ID}
+    </select>
+</mapper>

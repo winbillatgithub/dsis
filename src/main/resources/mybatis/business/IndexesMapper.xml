@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="IndexesMapper">
+	
+	<!--表名 -->
+	<sql id="tableName">
+		B_INDEXES
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		COLUMN_NAME_EN,
+		COLUMN_NAME_CN,
+		DATA_TYPE,
+		LENG,
+		DATA_PRECISION,
+		INITIAL_TYPE,
+		INITIAL_DATA,
+		VALIDATE_RULE,
+		CONTROL_TYPE,
+		CONTROL_SUB_TYPE,
+		READ_DISABLE,
+		SORT_NO,
+		REMARK,
+		NULLABLE,
+		CONTROL_FORMAT,
+		DATA_SOURCE,
+		RSV_STR1,
+		RSV_STR2,
+		RSV_STR3,
+		RSV_STR4,
+		CREATE_DATE,
+		MODIFY_DATE,
+		SYS_DEFAUTL,
+		OPERATOR,
+		INDEXES_ID,
+		CORP_ID
+	</sql>
+	<!-- 字段 -->
+	<sql id="Field_alias">
+		a.COLUMN_NAME_EN,
+		a.COLUMN_NAME_CN,
+		a.DATA_TYPE,
+		a.LENG,
+		a.DATA_PRECISION,
+		a.INITIAL_TYPE,
+		a.INITIAL_DATA,
+		a.VALIDATE_RULE,
+		a.CONTROL_TYPE,
+		a.CONTROL_SUB_TYPE,
+		a.READ_DISABLE,
+		a.SORT_NO,
+		a.REMARK,
+		a.NULLABLE,
+		a.CONTROL_FORMAT,
+		a.DATA_SOURCE,
+		a.RSV_STR1,
+		a.RSV_STR2,
+		a.RSV_STR3,
+		a.RSV_STR4,
+		a.CREATE_DATE,
+		a.MODIFY_DATE,
+		a.SYS_DEFAUTL,
+		a.OPERATOR,
+		a.INDEXES_ID,
+		a.CORP_ID
+	</sql>
+		
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{COLUMN_NAME_EN},
+		#{COLUMN_NAME_CN},
+		#{DATA_TYPE},
+		#{LENG},
+		#{DATA_PRECISION},
+		#{INITIAL_TYPE},
+		#{INITIAL_DATA},
+		#{VALIDATE_RULE},
+		#{CONTROL_TYPE},
+		#{CONTROL_SUB_TYPE},
+		#{READ_DISABLE},
+		#{SORT_NO},
+		#{REMARK},
+		#{NULLABLE},
+		#{CONTROL_FORMAT},
+		#{DATA_SOURCE},
+		#{RSV_STR1},
+		#{RSV_STR2},
+		#{RSV_STR3},
+		#{RSV_STR4},
+		#{CREATE_DATE},
+		#{MODIFY_DATE},
+		#{SYS_DEFAUTL},
+		#{OPERATOR},
+		#{INDEXES_ID},
+		#{CORP_ID}
+	</sql>
+	
+	<!-- 新增-->
+	<insert id="save" parameterType="pd">
+		insert into 
+	<include refid="tableName"></include>
+		(
+	<include refid="Field"></include>
+		) values (
+	<include refid="FieldValue"></include>
+		)
+	</insert>
+	
+	<!-- 删除-->
+	<delete id="delete" parameterType="pd">
+		delete from
+		<include refid="tableName"></include>
+		where 
+			INDEXES_ID = #{INDEXES_ID}
+	</delete>
+	
+	<!-- 修改 -->
+	<update id="edit" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+		set 
+			COLUMN_NAME_EN = #{COLUMN_NAME_EN},
+			COLUMN_NAME_CN = #{COLUMN_NAME_CN},
+			DATA_TYPE = #{DATA_TYPE},
+			LENG = #{LENG},
+			DATA_PRECISION = #{DATA_PRECISION},
+			INITIAL_TYPE = #{INITIAL_TYPE},
+			INITIAL_DATA = #{INITIAL_DATA},
+			VALIDATE_RULE = #{VALIDATE_RULE},
+			CONTROL_TYPE = #{CONTROL_TYPE},
+            CONTROL_SUB_TYPE = #{CONTROL_SUB_TYPE},
+			READ_DISABLE = #{READ_DISABLE},
+			SORT_NO = #{SORT_NO},
+			REMARK = #{REMARK},
+			NULLABLE = #{NULLABLE},
+			CONTROL_FORMAT = #{CONTROL_FORMAT},
+            DATA_SOURCE = #{DATA_SOURCE},
+			RSV_STR3 = #{RSV_STR3},
+			RSV_STR4 = #{RSV_STR4},
+			MODIFY_DATE = #{MODIFY_DATE},
+			OPERATOR = #{OPERATOR},
+		INDEXES_ID = INDEXES_ID
+		where 
+		INDEXES_ID = #{INDEXES_ID}
+	</update>
+	
+	<!-- 通过ID获取数据 -->
+	<!-- <select id="findById" parameterType="pd" resultType="pd">
+		select 
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 
+			INDEXES_ID = #{INDEXES_ID}
+	</select> -->
+	
+	<!-- 列表 -->
+	<select id="datalistPage" parameterType="page" resultType="pd">
+		select
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 1=1
+        <if test="pd.CORP_ID != null and pd.CORP_ID != ''">
+            AND CORP_ID = #{pd.CORP_ID}
+        </if>
+		<!--<if test="pd.CORP_ID != null and pd.CORP_ID != ''">-->
+			<!--and CORP_ID IN (-->
+				<!--SELECT CORP_ID FROM SYS_CORP m WHERE CORP_ID = #{pd.CORP_ID}-->
+				<!--UNION ALL-->
+				<!--SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{pd.CORP_ID}-->
+				<!--)-->
+				<!--UNION ALL-->
+				<!--SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{pd.CORP_ID}-->
+				<!--))-->
+				<!--UNION ALL-->
+				<!--SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{pd.CORP_ID}-->
+				<!--)))-->
+			<!--)-->
+		<!--</if>-->
+		<!-- <if test="pd.CORP_ID != null and pd.CORP_ID != ''">
+			and CORP_ID = #{pd.CORP_ID}
+		</if> -->
+		<if test="pd.keywords!= null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+				(
+					COLUMN_NAME_EN LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+					 or 
+					COLUMN_NAME_CN LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') 
+				)
+		</if>
+	</select>
+
+	<!-- 列表(全部) -->
+	<select id="listAll" parameterType="pd" resultType="pd">
+		select
+		<include refid="Field_alias"></include>, b.name_en DATA_TYPE_NAME, c.RULES RULE, c.NAME RULE_MSG
+		from 
+		<include refid="tableName"></include> a
+		left join sys_dictionaries b on a.data_type = b.dictionaries_id
+        left join b_cellrule c on a.VALIDATE_RULE = c.CELLRULE_ID
+		where 1=1
+        <if test="CORP_ID != null and CORP_ID != ''">
+            AND a.CORP_ID = #{CORP_ID}
+        </if>
+		<!--<if test="CORP_ID != null and CORP_ID != ''">-->
+			<!--and a.CORP_ID IN (-->
+				<!--SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = #{CORP_ID}-->
+				<!--UNION ALL-->
+				<!--SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{CORP_ID}-->
+				<!--)-->
+				<!--UNION ALL-->
+				<!--SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{CORP_ID}-->
+				<!--))-->
+				<!--UNION ALL-->
+				<!--SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{CORP_ID}-->
+				<!--)))-->
+			<!--)-->
+		<!--</if>-->
+		<if test="COLUMN_NAME_EN != null and COLUMN_NAME_EN != ''">
+			and a.COLUMN_NAME_EN = #{COLUMN_NAME_EN}
+		</if>
+		<if test="SYS_DEFAUTL != null and SYS_DEFAUTL != ''">
+			and a.SYS_DEFAUTL = #{SYS_DEFAUTL}
+		</if>
+		<if test="keywords!= null and keywords != ''"><!-- 关键词检索 -->
+			and
+				(
+					a.COLUMN_NAME_EN LIKE CONCAT(CONCAT('%', #{keywords}),'%')
+					 or 
+					a.COLUMN_NAME_CN LIKE CONCAT(CONCAT('%', #{keywords}),'%') 
+				)
+		</if>
+		order by a.SORT_NO
+	</select>
+
+	<!-- 批量删除 -->
+	<delete id="deleteAll" parameterType="String">
+		delete from
+		<include refid="tableName"></include>
+		where 
+			INDEXES_ID in
+		<foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+                 #{item}
+		</foreach>
+	</delete>
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="pd" resultType="pd">
+		select 
+		    a.COLUMN_NAME_EN,
+			a.COLUMN_NAME_CN,
+			a.DATA_TYPE,
+			a.LENG,
+			a.DATA_PRECISION,
+			a.INITIAL_TYPE,
+			a.INITIAL_DATA,
+			a.VALIDATE_RULE,
+			a.CONTROL_TYPE,
+            a.CONTROL_SUB_TYPE,
+			a.READ_DISABLE,
+			a.SORT_NO,
+			a.REMARK,
+			a.NULLABLE,
+			a.CONTROL_FORMAT,
+			a.DATA_SOURCE,
+			a.SYS_DEFAUTL,
+			a.RSV_STR2,
+			a.INDEXES_ID,
+			b.NAME_EN AS DATA_TYPE_NAME,
+			c.NAME_EN AS INITIAL_TYPE_NAME,
+			d.NAME_EN AS CONTROL_TYPE_NAME
+		from 
+		<include refid="tableName"></include> a
+		left join sys_dictionaries b on a.DATA_TYPE=b.dictionaries_id
+		left join sys_dictionaries c on a.INITIAL_TYPE=c.dictionaries_id
+		left join sys_dictionaries d on a.CONTROL_TYPE=d.dictionaries_id
+		where 1=1
+		<!-- <if test="CORP_ID != null and CORP_ID != ''">
+			AND a.CORP_ID = #{CORP_ID}
+		</if> -->
+			AND a.INDEXES_ID = #{INDEXES_ID}
+	</select>
+
+    <!-- 通过Name获取数据 -->
+    <select id="findByEnName" parameterType="pd" resultType="pd">
+        select
+        a.COLUMN_NAME_EN,
+        a.COLUMN_NAME_CN,
+        a.DATA_TYPE,
+        a.LENG,
+        a.DATA_PRECISION,
+        a.INITIAL_TYPE,
+        a.INITIAL_DATA,
+        a.VALIDATE_RULE,
+        a.CONTROL_TYPE,
+        a.CONTROL_SUB_TYPE,
+        a.READ_DISABLE,
+        a.SORT_NO,
+        a.REMARK,
+        a.NULLABLE,
+        a.CONTROL_FORMAT,
+        a.DATA_SOURCE,
+        a.SYS_DEFAUTL,
+        a.RSV_STR2,
+        a.INDEXES_ID,
+        b.NAME_EN AS DATA_TYPE_NAME,
+        c.NAME_EN AS INITIAL_TYPE_NAME,
+        d.NAME_EN AS CONTROL_TYPE_NAME
+        from
+        <include refid="tableName"></include> a
+        left join sys_dictionaries b on a.DATA_TYPE=b.dictionaries_id
+        left join sys_dictionaries c on a.INITIAL_TYPE=c.dictionaries_id
+        left join sys_dictionaries d on a.CONTROL_TYPE=d.dictionaries_id
+        where 1=1
+        <if test="CORP_ID != null and CORP_ID != ''">
+            AND a.CORP_ID = #{CORP_ID}
+        </if>
+        AND a.COLUMN_NAME_EN = #{COLUMN_NAME_EN}
+    </select>
+</mapper>

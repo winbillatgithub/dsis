@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="RowsMapper">
+	
+	<!--表名 -->
+	<sql id="tableName">
+		B_ROWS
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		TABLES_ID,	
+		DIMENTIONS_ID,	
+		SORT_NO,	
+		ROWS_ID,
+		CORP_ID
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{TABLES_ID},	
+		#{DIMENTIONS_ID},	
+		#{SORT_NO},	
+		#{ROWS_ID},
+		#{CORP_ID}
+	</sql>
+	
+	<!-- 新增-->
+	<insert id="save" parameterType="pd">
+		insert into 
+	<include refid="tableName"></include>
+		(
+	<include refid="Field"></include>
+		) values (
+	<include refid="FieldValue"></include>
+		)
+	</insert>
+	
+	<!-- 删除-->
+	<delete id="delete" parameterType="pd">
+		delete from
+		<include refid="tableName"></include>
+		where 
+			ROWS_ID = #{ROWS_ID}
+	</delete>
+	
+	<!-- 修改 -->
+	<update id="edit" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+		set 
+			TABLES_ID = #{TABLES_ID},
+			DIMENTIONS_ID = #{DIMENTIONS_ID},
+			SORT_NO = #{SORT_NO},
+		ROWS_ID = ROWS_ID
+		where 
+		ROWS_ID = #{ROWS_ID}
+	</update>
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="pd" resultType="pd">
+		select 
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 1=1
+		<!-- <if test="CORP_ID != null and CORP_ID != ''">
+			AND CORP_ID = #{CORP_ID}
+		</if> -->
+			AND ROWS_ID = #{ROWS_ID}
+	</select>
+	
+	<!-- 列表 -->
+	<select id="datalistPage" parameterType="page" resultType="pd">
+		select
+			a.TABLES_ID,
+			a.DIMENTIONS_ID,
+			a.SORT_NO,
+			a.ROWS_ID,
+			b.NAME DIMENTIONS_NAME_CN,
+			b.NAME_EN DIMENTIONS_NAME_EN
+		from 
+			B_ROWS a
+			left join B_DIMENTIONS b on a.DIMENTIONS_ID = b.DIMENTIONS_ID
+		where 1=1
+		<if test="pd.CORP_ID != null and pd.CORP_ID != ''">
+			and a.CORP_ID IN (
+				SELECT CORP_ID FROM SYS_CORP m WHERE CORP_ID = #{pd.CORP_ID}
+				UNION ALL
+				SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (
+				SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{pd.CORP_ID}
+				)
+				UNION ALL
+				SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (
+				SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (
+				SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{pd.CORP_ID}
+				))
+				UNION ALL
+				SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (
+				SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (
+				SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (
+				SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{pd.CORP_ID}
+				)))
+			)
+		</if>
+		<!-- <if test="pd.CORP_ID != null and pd.CORP_ID != ''">
+			and a.CORP_ID = #{pd.CORP_ID}
+		</if> -->
+		<if test="pd.TABLES_ID != null and pd.TABLES_ID != ''">
+		    and a.TABLES_ID = #{pd.TABLES_ID}
+		</if>
+		<if test="pd.keywords!= null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+				(
+					a.TABLES_ID LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+			
+				)
+		</if>
+		order by a.tables_id, a.sort_no
+	</select>
+	
+	<!-- 列表(全部) -->
+	<select id="listAll" parameterType="pd" resultType="pd">
+		select
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 1=1
+		<if test="CORP_ID != null and CORP_ID != ''">
+			and CORP_ID IN (
+				SELECT CORP_ID FROM SYS_CORP m WHERE CORP_ID = #{CORP_ID}
+				UNION ALL
+				SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (
+				SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{CORP_ID}
+				)
+				UNION ALL
+				SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (
+				SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (
+				SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{CORP_ID}
+				))
+				UNION ALL
+				SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (
+				SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (
+				SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (
+				SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{CORP_ID}
+				)))
+			)
+		</if>
+		<!-- <if test="CORP_ID != null and CORP_ID != ''">
+			and CORP_ID = #{CORP_ID}
+		</if> -->
+	</select>
+	
+	<!-- 批量删除 -->
+	<delete id="deleteAll" parameterType="String">
+		delete from
+		<include refid="tableName"></include>
+		where 
+			ROWS_ID in
+		<foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+                 #{item}
+		</foreach>
+	</delete>
+	
+	<update id="addColumn" parameterType="pd">
+	    <![CDATA[
+	    alter table `${SCHEMA}`.${TABLE_NAME_EN} add ${COLUMN_NAME_EN} ${COLUMN_TYPE};
+	    ]]>
+	</update>
+	<update id="dropColumn" parameterType="pd">
+	    <![CDATA[
+	    alter table `${SCHEMA}`.${TABLE_NAME_EN} drop ${COLUMN_NAME_EN};
+	    ]]>
+	</update>
+	<update id="changeColumn" parameterType="pd">
+	    <![CDATA[
+	    alter table `${SCHEMA}`.${TABLE_NAME_EN} change ${COLUMN_NAME_EN_OLD} ${COLUMN_NAME_EN_NEW} ${COLUMN_TYPE_NEW};
+	    ]]>
+	</update>
+	<update id="modifyColumn" parameterType="pd">
+	    <![CDATA[
+	    alter table `${SCHEMA}`.${TABLE_NAME_EN} modify ${COLUMN_NAME_EN} ${COLUMN_TYPE_NEW};
+	    ]]>
+	</update>
+</mapper>

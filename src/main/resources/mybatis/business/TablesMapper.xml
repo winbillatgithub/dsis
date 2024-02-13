@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="TablesMapper">
+	
+	<!--表名 -->
+	<sql id="tableName">
+		B_TABLES
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		TABLE_NAME,	
+		TABLE_NAME_EN,	
+		REMARK,	
+		SORT_NO,	
+		STATUS,	
+		TABLES_ID,
+		CORP_ID,
+		JSON_DATA
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{TABLE_NAME},	
+		#{TABLE_NAME_EN},	
+		#{REMARK},	
+		#{SORT_NO},	
+		#{STATUS},	
+		#{TABLES_ID},
+		#{CORP_ID},
+		#{JSON_DATA}
+	</sql>
+	
+	<!-- 新增-->
+	<insert id="save" parameterType="pd">
+		insert into 
+	<include refid="tableName"></include>
+		(
+	<include refid="Field"></include>
+		) values (
+	<include refid="FieldValue"></include>
+		)
+	</insert>
+	
+	<!-- 删除-->
+	<delete id="delete" parameterType="pd">
+		delete from
+		<include refid="tableName"></include>
+		where 
+			TABLES_ID = #{TABLES_ID}
+	</delete>
+	
+	<!-- 修改 -->
+	<update id="edit" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+		set 
+			TABLE_NAME = #{TABLE_NAME},
+			TABLE_NAME_EN = #{TABLE_NAME_EN},
+			REMARK = #{REMARK},
+			SORT_NO = #{SORT_NO},
+			JSON_DATA = #{JSON_DATA}
+		where
+		TABLES_ID = #{TABLES_ID}
+	</update>
+
+	<!-- 修改 -->
+	<update id="updateStatus" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+		set
+		STATUS = #{STATUS}
+		where
+		TABLES_ID = #{TABLES_ID}
+	</update>
+
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="pd" resultType="pd">
+		select 
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 1=1
+		<!-- <if test="CORP_ID != null and CORP_ID != ''">
+			AND CORP_ID = #{CORP_ID}
+		</if> -->
+			AND TABLES_ID = #{TABLES_ID}
+	</select>
+	
+	<!-- 列表 -->
+	<select id="datalistPage" parameterType="page" resultType="pd">
+		select
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 1=1
+		<!--<if test="pd.CORP_ID != null and pd.CORP_ID != ''">-->
+			<!--and CORP_ID IN (-->
+				<!--SELECT CORP_ID FROM SYS_CORP m WHERE CORP_ID = #{pd.CORP_ID}-->
+				<!--UNION ALL-->
+				<!--SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{pd.CORP_ID}-->
+				<!--)-->
+				<!--UNION ALL-->
+				<!--SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{pd.CORP_ID}-->
+				<!--))-->
+				<!--UNION ALL-->
+				<!--SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{pd.CORP_ID}-->
+				<!--)))-->
+			<!--)-->
+		<!--</if>-->
+		<if test="pd.CORP_ID != null and pd.CORP_ID != ''">
+			and CORP_ID = #{pd.CORP_ID}
+		</if>
+		<if test="pd.keywords!= null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+				(
+					TABLE_NAME LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+					 or 
+					REMARK LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') 
+					or
+					TABLE_NAME_EN  LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') 
+				)
+		</if>
+	</select>
+	
+	<!-- 列表(全部) -->
+	<select id="listAll" parameterType="pd" resultType="pd">
+		select
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 1=1
+		<!--<if test="CORP_ID != null and CORP_ID != ''">-->
+			<!--and CORP_ID IN (-->
+				<!--SELECT CORP_ID FROM SYS_CORP m WHERE CORP_ID = #{CORP_ID}-->
+				<!--UNION ALL-->
+				<!--SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{CORP_ID}-->
+				<!--)-->
+				<!--UNION ALL-->
+				<!--SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{CORP_ID}-->
+				<!--))-->
+				<!--UNION ALL-->
+				<!--SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{CORP_ID}-->
+				<!--)))-->
+			<!--)-->
+		<!--</if>-->
+		<if test="CORP_ID != null and CORP_ID != ''">
+			and CORP_ID = #{CORP_ID}
+		</if>
+	</select>
+	
+	<!-- 批量删除 -->
+	<delete id="deleteAll" parameterType="String">
+		delete from
+		<include refid="tableName"></include>
+		where 
+			TABLES_ID in
+		<foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+                 #{item}
+		</foreach>
+	</delete>
+
+	<!-- 通过编码获取数据 -->
+	<select id="findByBianma" parameterType="pd" resultType="pd">
+		select 
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 1=1
+		<!--<if test='CORP_ID != null and CORP_ID != "" '>-->
+			<!--and CORP_ID IN (-->
+				<!--SELECT m.CORP_ID FROM SYS_CORP m WHERE m.CORP_ID = #{CORP_ID}-->
+				<!--UNION ALL-->
+				<!--SELECT CORP_ID FROM SYS_CORP WHERE PARENT_ID = #{CORP_ID}-->
+				<!--UNION ALL-->
+				<!--SELECT CORP_ID FROM SYS_CORP WHERE PARENT_ID IN (-->
+				<!--SELECT CORP_ID FROM SYS_CORP WHERE PARENT_ID = #{CORP_ID}-->
+				<!--)-->
+				<!--UNION ALL-->
+				<!--SELECT CORP_ID FROM SYS_CORP WHERE PARENT_ID IN (-->
+				<!--SELECT CORP_ID FROM SYS_CORP WHERE PARENT_ID IN (-->
+				<!--SELECT CORP_ID FROM SYS_CORP WHERE PARENT_ID = #{CORP_ID}-->
+				<!--))-->
+			<!--)-->
+		<!--</if>-->
+        <if test="CORP_ID != null and CORP_ID != ''">
+            and CORP_ID = #{CORP_ID}
+        </if>
+		AND TABLE_NAME_EN = #{TABLE_NAME_EN}
+	</select>
+	<update id="createTable" parameterType="pd">
+	    <![CDATA[
+	    CREATE TABLE `${SCHEMA}`.`${TABLE_NAME_EN}` (`${TABLE_NAME_EN}_ID` VARCHAR(100), `DATA_DATE` DATE, `CORP_ID` VARCHAR(100), 
+	    `SORT_NO` INTEGER, `CREATE_ID` VARCHAR(64), `CREATE_TIME` DATETIME, `UPDATE_TIME` DATETIME,
+	    `PARENT_ID` VARCHAR(32), `LEVEL` INTEGER DEFAULT '1', `STATUS` CHAR(1) DEFAULT '1', `VERSION` INTEGER(5) DEFAULT '1', 
+	    `RSV1` VARCHAR(32), `RSV2` VARCHAR(32), `RSV3` VARCHAR(32),
+	    PRIMARY KEY (`${TABLE_NAME_EN}_ID`),
+	    KEY `idx_update_time` (`UPDATE_TIME`)
+	    )ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	    ]]>
+	</update>
+	<update id="renameTable" parameterType="pd">
+	    <![CDATA[
+		ALTER TABLE `${SCHEMA}`.`${TABLE_NAME_EN_OLD}` CHANGE `${TABLE_NAME_EN_OLD}_ID` `${TABLE_NAME_EN}_ID` varchar(100);
+	    ALTER TABLE `${SCHEMA}`.`${TABLE_NAME_EN_OLD}` RENAME TO `${SCHEMA}`.`${TABLE_NAME_EN}`;
+	    ]]>
+	</update>
+		<update id="dropTable" parameterType="pd">
+	    <![CDATA[
+	    DROP TABLE `${SCHEMA}`.`${TABLE_NAME_EN}`;
+	    ]]>
+	</update>
+</mapper>

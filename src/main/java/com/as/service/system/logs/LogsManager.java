@@ -1,0 +1,62 @@
+package com.as.service.system.logs;
+
+import java.util.List;
+import com.as.entity.Page;
+import com.as.util.PageData;
+
+/** 
+ * 说明： 电子日志接口
+ * 创建人：antispy
+ * 创建时间：2016-09-21
+ * @version
+ */
+public interface LogsManager{
+
+	/**新增
+	 * @param pd
+	 * @throws Exception
+	 */
+	public void save(PageData pd)throws Exception;
+	
+	/**删除
+	 * @param pd
+	 * @throws Exception
+	 */
+	public void delete(PageData pd)throws Exception;
+	
+	/**修改
+	 * @param pd
+	 * @throws Exception
+	 */
+	public void edit(PageData pd)throws Exception;
+	
+	/**列表
+	 * @param page
+	 * @throws Exception
+	 */
+	public List<PageData> list(Page page)throws Exception;
+	
+	/**列表(全部)
+	 * @param pd
+	 * @throws Exception
+	 */
+	public List<PageData> listAll(PageData pd)throws Exception;
+	
+	/**通过id获取数据
+	 * @param pd
+	 * @throws Exception
+	 */
+	public PageData findById(PageData pd)throws Exception;
+	
+	/**批量删除
+	 * @param pd
+	 * @throws Exception
+	 */
+	public void deleteAll(PageData pd)throws Exception;
+
+    /**全部删除
+     * @param sql
+     * @throws Exception
+     */
+    public void truncate(String sql) throws Exception;
+}

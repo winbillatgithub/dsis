@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="MultiTableRuleMapper">
+	
+	<!--表名 -->
+	<sql id="tableName">
+		B_MULTITABLERULE
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		NAME,	
+		TABLES_ID,	
+		COLUMNS_ID,	
+		JOIN_TABLES_ID,	
+		JOIN_COLUMNS_ID,	
+		JOIN_CONDITION,	
+		RSV_STR1,	
+		RSV_STR2,	
+		CORP_ID,	
+		MULTITABLERULE_ID
+	</sql>
+	<sql id="Alias_Field">
+		a.NAME,	
+		a.TABLES_ID,	
+		a.COLUMNS_ID,	
+		a.JOIN_TABLES_ID,	
+		a.JOIN_COLUMNS_ID,	
+		a.JOIN_CONDITION,	
+		a.RSV_STR1,	
+		a.RSV_STR2,	
+		a.CORP_ID,	
+		a.MULTITABLERULE_ID
+	</sql>
+		
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{NAME},	
+		#{TABLES_ID},	
+		#{COLUMNS_ID},	
+		#{JOIN_TABLES_ID},	
+		#{JOIN_COLUMNS_ID},	
+		#{JOIN_CONDITION},	
+		#{RSV_STR1},	
+		#{RSV_STR2},	
+		#{CORP_ID},	
+		#{MULTITABLERULE_ID}
+	</sql>
+	
+	<!-- 新增-->
+	<insert id="save" parameterType="pd">
+		insert into 
+	<include refid="tableName"></include>
+		(
+	<include refid="Field"></include>
+		) values (
+	<include refid="FieldValue"></include>
+		)
+	</insert>
+	
+	<insert id="saveList" parameterType="java.util.List">
+		insert into B_MULTITABLERULE 
+		(
+			NAME,	
+			TABLES_ID,	
+			COLUMNS_ID,	
+			JOIN_TABLES_ID,	
+			JOIN_COLUMNS_ID,	
+			JOIN_CONDITION,	
+			RSV_STR1,	
+			RSV_STR2,	
+			CORP_ID,	
+			MULTITABLERULE_ID
+		) values 
+		<foreach collection="list" item="pd"  separator=",">  
+		     (	#{pd.NAME},	
+				#{pd.TABLES_ID},	
+				#{pd.COLUMNS_ID},	
+				#{pd.JOIN_TABLES_ID},	
+				#{pd.JOIN_COLUMNS_ID},	
+				#{pd.JOIN_CONDITION},	
+				#{pd.RSV_STR1},	
+				#{pd.RSV_STR2},	
+				#{pd.CORP_ID},	
+				#{pd.MULTITABLERULE_ID}
+			)
+	     </foreach>  
+			
+		
+	</insert>
+	
+	
+	<!-- 删除-->
+	<delete id="delete" parameterType="pd">
+		delete from
+		<include refid="tableName"></include>
+		where 
+			MULTITABLERULE_ID = #{MULTITABLERULE_ID}
+	</delete>
+	
+	<delete id="deleteCORP" parameterType="String">
+		delete from <include refid="tableName"></include>
+		where CORP_ID = #{CORP_ID}
+	</delete>
+	
+	<!-- 修改 -->
+	<update id="edit" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+		set 
+			NAME = #{NAME},
+			TABLES_ID = #{TABLES_ID},
+			COLUMNS_ID = #{COLUMNS_ID},
+			JOIN_TABLES_ID = #{JOIN_TABLES_ID},
+			JOIN_COLUMNS_ID = #{JOIN_COLUMNS_ID},
+			JOIN_CONDITION = #{JOIN_CONDITION},
+		MULTITABLERULE_ID = MULTITABLERULE_ID
+		where 
+		MULTITABLERULE_ID = #{MULTITABLERULE_ID}
+	</update>
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="pd" resultType="pd">
+		select 
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 
+			MULTITABLERULE_ID = #{MULTITABLERULE_ID}
+	</select>
+    <!-- 通过JOIN_TABLES_ID&JOIN_COLUMNS_ID获取数据 -->
+    <select id="findByJoinColumnsId" parameterType="pd" resultType="pd">
+        select
+        a.TABLES_ID, b.TABLE_NAME
+        from
+        B_MULTITABLERULE a
+        left join B_TABLES b on a.TABLES_ID = b.TABLES_ID
+        where
+        a.CORP_ID = #{CORP_ID}
+        and a.JOIN_TABLES_ID = #{TABLES_ID}
+        and a.JOIN_COLUMNS_ID = #{COLUMNS_ID}
+        and a.JOIN_CONDITION = '1'
+    </select>
+	<!-- 列表 -->
+	<select id="datalistPage" parameterType="page" resultType="pd">
+		select
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 1=1
+        <if test="pd.CORP_ID != null and pd.CORP_ID != ''">
+            and CORP_ID = #{pd.CORP_ID}
+        </if>
+		<if test="pd.keywords!= null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+				(
+					NAME LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+				)
+		</if>
+	</select>
+	
+	<!-- 列表(全部) -->
+	<select id="listAll" parameterType="pd" resultType="pd">
+		select
+			<include refid="Alias_Field"></include>, c.COLUMN_NAME_EN COLUMNS_NAME_EN, e.COLUMN_NAME_EN JOIN_COLUMNS_NAME_EN
+		from 
+		<include refid="tableName"></include> a
+		left join B_COLUMNS b on a.COLUMNS_ID = b.COLUMNS_ID
+		left join B_INDEXES c on b.INDEXES_ID = c.INDEXES_ID
+		left join B_COLUMNS d on a.JOIN_COLUMNS_ID = d.COLUMNS_ID
+		left join B_INDEXES e on d.INDEXES_ID = e.INDEXES_ID
+		where 1=1
+		<!--<if test="CORP_ID != null and CORP_ID != ''">-->
+			<!--and a.CORP_ID IN (-->
+				<!--SELECT CORP_ID FROM SYS_CORP m WHERE CORP_ID = #{CORP_ID}-->
+				<!--UNION ALL-->
+				<!--SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{CORP_ID}-->
+				<!--)-->
+				<!--UNION ALL-->
+				<!--SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{CORP_ID}-->
+				<!--))-->
+				<!--UNION ALL-->
+				<!--SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{CORP_ID}-->
+				<!--)))-->
+			<!--)-->
+		<!--</if>-->
+		<if test="CORP_ID != null and CORP_ID != ''">
+			and a.CORP_ID = #{CORP_ID}
+		</if>
+		<if test="TABLES_ID != null and TABLES_ID != ''">
+		    and a.TABLES_ID = #{TABLES_ID}
+		</if>
+		<if test="COLUMNS_ID != null and COLUMNS_ID != ''">
+		    and a.COLUMNS_ID = #{COLUMNS_ID}
+		</if>
+		<if test="JOIN_CONDITION != null and JOIN_CONDITION != ''">
+		    and a.JOIN_CONDITION = #{JOIN_CONDITION}
+		</if>
+	</select>
+	
+	<!-- 批量删除 -->
+	<delete id="deleteAll" parameterType="String">
+		delete from
+		<include refid="tableName"></include>
+		where 
+			MULTITABLERULE_ID in
+		<foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+                 #{item}
+		</foreach>
+	</delete>
+	
+	<!-- fh313596790qq(青苔) -->
+</mapper>

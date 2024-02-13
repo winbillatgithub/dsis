@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="TableRuleMapper">
+	
+	<!--表名 -->
+	<sql id="tableName">
+		B_TABLERULE
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		TABLES_ID,	
+		RULE_ID,	
+		RULE_CONTENT,	
+		SORT_NO,	
+		TABLERULE_ID,
+		CORP_ID
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{TABLES_ID},	
+		#{RULE_ID},	
+		#{RULE_CONTENT},	
+		#{SORT_NO},	
+		#{TABLERULE_ID},
+		#{CORP_ID}
+	</sql>
+	
+	<!-- 新增-->
+	<insert id="save" parameterType="pd">
+		insert into 
+	<include refid="tableName"></include>
+		(
+	<include refid="Field"></include>
+		) values (
+	<include refid="FieldValue"></include>
+		)
+	</insert>
+	
+	<!-- 删除-->
+	<delete id="delete" parameterType="pd">
+		delete from
+		<include refid="tableName"></include>
+		where 
+			TABLERULE_ID = #{TABLERULE_ID}
+	</delete>
+	
+	<!-- 修改 -->
+	<update id="edit" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+		set 
+			TABLES_ID = #{TABLES_ID},
+			RULE_ID = #{RULE_ID},
+			RULE_CONTENT = #{RULE_CONTENT},
+			SORT_NO = #{SORT_NO},
+		TABLERULE_ID = TABLERULE_ID
+		where 
+		TABLERULE_ID = #{TABLERULE_ID}
+	</update>
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="pd" resultType="pd">
+		select
+			a.TABLES_ID,	
+			a.RULE_ID,	
+			a.RULE_CONTENT,	
+			a.SORT_NO,	
+			a.TABLERULE_ID,
+			b.NAME AS RULE_NAME,
+			c.COLUMN_NAME_CN AS OUT_FIELD_CN,
+			d.COLUMN_NAME_CN AS IN_FIELD1_CN,
+			e.COLUMN_NAME_CN AS IN_FIELD2_CN,
+			c.COLUMN_NAME_EN AS OUT_FIELD,
+			d.COLUMN_NAME_EN AS IN_FIELD1,
+			e.COLUMN_NAME_EN AS IN_FIELD2,
+			f.bianma AS OPERATOR_FIELD
+		from 
+		<include refid="tableName"></include> a
+		left join b_singletablebusinessrule b on a.RULE_ID = b.SINGLETABLEBUSINESSRULE_ID
+		left join b_indexes c on b.OUT_FIELD = c.INDEXES_ID
+		left join b_indexes d on b.IN_FIELD1 = d.INDEXES_ID
+		left join b_indexes e on b.IN_FIELD2 = e.INDEXES_ID
+		left join sys_dictionaries f on b.OPERATOR_FIELD = f.dictionaries_id
+		where 1=1
+		<!-- <if test="CORP_ID != null and CORP_ID != ''">
+			AND a.CORP_ID = #{CORP_ID}
+		</if> -->
+			AND a.TABLERULE_ID = #{TABLERULE_ID}
+	</select>
+	
+	<!-- 列表 -->
+	<select id="datalistPage" parameterType="page" resultType="pd">
+		select
+			a.TABLES_ID,	
+			a.RULE_ID,	
+			a.RULE_CONTENT,	
+			a.SORT_NO,	
+			a.TABLERULE_ID,
+			b.NAME AS RULE_NAME,
+			c.COLUMN_NAME_CN AS OUT_FIELD_CN,
+			d.COLUMN_NAME_CN AS IN_FIELD1_CN,
+			e.COLUMN_NAME_CN AS IN_FIELD2_CN,
+			c.COLUMN_NAME_EN AS OUT_FIELD,
+			d.COLUMN_NAME_EN AS IN_FIELD1,
+			e.COLUMN_NAME_EN AS IN_FIELD2,
+			f.bianma AS OPERATOR_FIELD
+		from 
+		B_TABLERULE a
+		left join b_singletablebusinessrule b on a.RULE_ID = b.SINGLETABLEBUSINESSRULE_ID
+		left join b_indexes c on b.OUT_FIELD = c.INDEXES_ID
+		left join b_indexes d on b.IN_FIELD1 = d.INDEXES_ID
+		left join b_indexes e on b.IN_FIELD2 = e.INDEXES_ID
+		left join sys_dictionaries f on b.OPERATOR_FIELD = f.dictionaries_id
+		where 1=1
+		<if test="pd.CORP_ID != null and pd.CORP_ID != ''">
+			and a.CORP_ID IN (
+				SELECT CORP_ID FROM SYS_CORP m WHERE CORP_ID = #{pd.CORP_ID}
+				UNION ALL
+				SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (
+				SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{pd.CORP_ID}
+				)
+				UNION ALL
+				SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (
+				SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (
+				SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{pd.CORP_ID}
+				))
+				UNION ALL
+				SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (
+				SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (
+				SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (
+				SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{pd.CORP_ID}
+				)))
+			)
+		</if>
+		<!-- <if test="pd.CORP_ID != null and pd.CORP_ID != ''">
+			and a.CORP_ID = #{pd.CORP_ID}
+		</if> -->
+		<if test="pd.keywords!= null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+				(
+					c.COLUMN_NAME_CN LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+					 or 
+					d.COLUMN_NAME_CN LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') 
+					or 
+					e.COLUMN_NAME_CN LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') 
+				)
+		</if>
+	</select>
+	
+	<!-- 列表(全部) -->
+	<select id="listAll" parameterType="pd" resultType="pd">
+		select
+			a.TABLES_ID,	
+			a.RULE_ID,	
+			a.RULE_CONTENT,	
+			a.SORT_NO,	
+			a.TABLERULE_ID,
+			b.NAME AS RULE_NAME,
+			c.COLUMN_NAME_CN AS OUT_FIELD_CN,
+			d.COLUMN_NAME_CN AS IN_FIELD1_CN,
+			e.COLUMN_NAME_CN AS IN_FIELD2_CN,
+			c.COLUMN_NAME_EN AS OUT_FIELD,
+			d.COLUMN_NAME_EN AS IN_FIELD1,
+			e.COLUMN_NAME_EN AS IN_FIELD2,
+			f.bianma AS OPERATOR_FIELD
+		from 
+		<include refid="tableName"></include> a
+		left join b_singletablebusinessrule b on a.RULE_ID = b.SINGLETABLEBUSINESSRULE_ID
+		left join b_indexes c on b.OUT_FIELD = c.INDEXES_ID
+		left join b_indexes d on b.IN_FIELD1 = d.INDEXES_ID
+		left join b_indexes e on b.IN_FIELD2 = e.INDEXES_ID
+		left join sys_dictionaries f on b.OPERATOR_FIELD = f.dictionaries_id
+		where 1=1
+		<if test="CORP_ID != null and CORP_ID != ''">
+			and a.CORP_ID IN (
+				SELECT CORP_ID FROM SYS_CORP m WHERE CORP_ID = #{CORP_ID}
+				UNION ALL
+				SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (
+				SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{CORP_ID}
+				)
+				UNION ALL
+				SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (
+				SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (
+				SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{CORP_ID}
+				))
+				UNION ALL
+				SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (
+				SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (
+				SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (
+				SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{CORP_ID}
+				)))
+			)
+		</if>
+		<!-- <if test="CORP_ID != null and CORP_ID != ''">
+			and a.CORP_ID = #{CORP_ID}
+		</if> -->
+		<if test="TABLES_ID != null and TABLES_ID != ''">
+		    AND a.TABLES_ID = #{TABLES_ID}
+		</if>
+	</select>
+	
+	<!-- 批量删除 -->
+	<delete id="deleteAll" parameterType="String">
+		delete from
+		<include refid="tableName"></include>
+		where 
+			TABLERULE_ID in
+		<foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+                 #{item}
+		</foreach>
+	</delete>
+	
+	<!-- fh313596790qq(青苔) -->
+</mapper>

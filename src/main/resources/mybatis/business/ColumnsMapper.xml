@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ColumnsMapper">
+	
+	<!--表名 -->
+	<sql id="tableName">
+		B_COLUMNS
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		TABLES_ID,	
+		INDEXES_ID,	
+		SORT_NO,	
+		COLUMNS_ID,
+		SEARCH,
+		CORP_ID
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{TABLES_ID},	
+		#{INDEXES_ID},	
+		#{SORT_NO},	
+		#{COLUMNS_ID},
+		#{SEARCH},
+		#{CORP_ID}
+	</sql>
+	
+	<!-- 新增-->
+	<insert id="save" parameterType="pd">
+		insert into 
+	<include refid="tableName"></include>
+		(
+	<include refid="Field"></include>
+		) values (
+	<include refid="FieldValue"></include>
+		)
+	</insert>
+	
+	<!-- 删除-->
+	<delete id="delete" parameterType="pd">
+		delete from
+		<include refid="tableName"></include>
+		where 
+			COLUMNS_ID = #{COLUMNS_ID}
+	</delete>
+
+	<!-- 修改 -->
+	<update id="edit" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+		set 
+			TABLES_ID = #{TABLES_ID},
+			INDEXES_ID = #{INDEXES_ID},
+			SEARCH = #{SEARCH},
+			SORT_NO = #{SORT_NO}
+		where 
+		COLUMNS_ID = #{COLUMNS_ID}
+	</update>
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="pd" resultType="pd">
+		select 
+			a.COLUMNS_ID,
+			a.TABLES_ID,
+			a.INDEXES_ID,
+			a.SORT_NO,
+			a.SEARCH,
+			b.COLUMN_NAME_EN,
+			b.COLUMN_NAME_CN,
+			b.SYS_DEFAUTL
+		from 
+			B_COLUMNS a
+		left join B_INDEXES b on a.INDEXES_ID = b.INDEXES_ID
+		where a.COLUMNS_ID = #{COLUMNS_ID}
+	</select>
+    <!-- 通过INDEXES_ID获取数据 -->
+    <select id="findByIndexesId" parameterType="pd" resultType="pd">
+        select
+        a.COLUMNS_ID,
+        a.TABLES_ID,
+        a.INDEXES_ID,
+        a.SORT_NO,
+        a.SEARCH,
+        b.COLUMN_NAME_CN,
+        c.TABLE_NAME
+        from
+        B_COLUMNS a
+		left join B_INDEXES b on a.INDEXES_ID = b.INDEXES_ID
+		left join B_TABLES c on a.TABLES_ID = c.TABLES_ID
+        where a.INDEXES_ID = #{INDEXES_ID}
+    </select>
+
+    <!-- 通过Column English Name获取数据 -->
+    <select id="findByEnName" parameterType="pd" resultType="pd">
+        select
+        a.COLUMNS_ID,
+        a.TABLES_ID,
+        a.INDEXES_ID,
+        a.SORT_NO,
+        a.SEARCH,
+        b.COLUMN_NAME_EN,
+        b.COLUMN_NAME_CN,
+        b.SYS_DEFAUTL
+        from
+        B_COLUMNS a
+        left join B_INDEXES b on a.INDEXES_ID = b.INDEXES_ID
+        where a.CORP_ID = #{CORP_ID} and a.TABLES_ID = #{TABLES_ID} and b.COLUMN_NAME_EN = #{COLUMN_NAME_EN}
+    </select>
+
+	<!-- 列表 -->
+	<select id="datalistPage" parameterType="page" resultType="pd">
+		select
+			a.TABLES_ID,
+			a.INDEXES_ID,
+			a.SORT_NO,
+			a.COLUMNS_ID,
+			a.SEARCH,
+			b.COLUMN_NAME_EN,
+			b.COLUMN_NAME_CN,
+			b.DATA_TYPE,
+			b.LENG,
+			b.DATA_PRECISION,
+			b.INITIAL_TYPE,
+			b.INITIAL_DATA,
+			b.VALIDATE_RULE,
+			b.CONTROL_TYPE,
+            b.CONTROL_SUB_TYPE,
+			b.NULLABLE,
+			b.CONTROL_FORMAT,
+            b.DATA_SOURCE,
+			b.SYS_DEFAUTL,
+			b.RSV_STR2,
+			c.NAME_EN AS DATA_TYPE_NAME,
+			d.NAME_EN AS INITIAL_TYPE_NAME,
+			e.NAME_EN AS CONTROL_TYPE_NAME,
+			f.RULES AS RULE,
+			f.NAME AS RULE_MSG
+		from 
+			B_COLUMNS a
+		left join B_INDEXES b on a.INDEXES_ID = b.INDEXES_ID
+		left join sys_dictionaries c on b.DATA_TYPE=c.dictionaries_id
+		left join sys_dictionaries d on b.INITIAL_TYPE=d.dictionaries_id
+		left join sys_dictionaries e on b.CONTROL_TYPE=e.dictionaries_id
+		left join b_cellrule f on b.VALIDATE_RULE=f.cellrule_id
+		where 1=1
+
+		<!--<if test="pd.CORP_ID != null and pd.CORP_ID != ''">-->
+			<!--and a.CORP_ID IN (-->
+				<!--SELECT CORP_ID FROM SYS_CORP m WHERE CORP_ID = #{pd.CORP_ID}-->
+				<!--UNION ALL-->
+				<!--SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{pd.CORP_ID}-->
+				<!--)-->
+				<!--UNION ALL-->
+				<!--SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{pd.CORP_ID}-->
+				<!--))-->
+				<!--UNION ALL-->
+				<!--SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{pd.CORP_ID}-->
+				<!--)))-->
+			<!--)-->
+		<!--</if>-->
+
+		<if test="pd.CORP_ID != null and pd.CORP_ID != ''">
+			and a.CORP_ID = #{pd.CORP_ID}
+		</if>
+		<if test="pd.TABLES_ID != null and pd.TABLES_ID != ''">
+		    and a.TABLES_ID = #{pd.TABLES_ID}
+		</if>
+		<if test="pd.keywords!= null and pd.keywords != ''">
+			and
+				(
+					f.NAME LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+					 or 
+					f.RULES LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') 
+					or 
+					b.COLUMN_NAME_CN LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') 
+				)
+		</if>
+		order by a.tables_id, a.sort_no
+	</select>
+	
+	<!-- 列表(全部) -->
+	<select id="listAll" parameterType="pd" resultType="pd">
+        select
+        a.TABLES_ID,
+        a.INDEXES_ID,
+        a.SORT_NO,
+        a.COLUMNS_ID,
+        a.SEARCH,
+        b.COLUMN_NAME_EN,
+        b.COLUMN_NAME_CN,
+        b.DATA_TYPE,
+        b.LENG,
+        b.DATA_PRECISION,
+        b.INITIAL_TYPE,
+        b.INITIAL_DATA,
+        b.VALIDATE_RULE,
+        b.CONTROL_TYPE,
+        b.CONTROL_SUB_TYPE,
+        b.NULLABLE,
+        b.CONTROL_FORMAT,
+        b.DATA_SOURCE,
+        b.SYS_DEFAUTL,
+        b.RSV_STR2
+        from
+        B_COLUMNS a
+        left join B_INDEXES b on a.INDEXES_ID = b.INDEXES_ID
+		where 1=1
+        <if test="CORP_ID != null and CORP_ID != ''">
+            and a.CORP_ID = #{CORP_ID}
+        </if>
+		<!--<if test="CORP_ID != null and CORP_ID != ''">-->
+			<!--and a.CORP_ID IN (-->
+				<!--SELECT CORP_ID FROM SYS_CORP m WHERE CORP_ID = #{CORP_ID}-->
+				<!--UNION ALL-->
+				<!--SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{CORP_ID}-->
+				<!--)-->
+				<!--UNION ALL-->
+				<!--SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{CORP_ID}-->
+				<!--))-->
+				<!--UNION ALL-->
+				<!--SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (-->
+				<!--SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{CORP_ID}-->
+				<!--)))-->
+			<!--)-->
+		<!--</if>-->
+        <if test="TABLES_ID != null and TABLES_ID != ''">
+            and a.TABLES_ID = #{TABLES_ID}
+        </if>
+	</select>
+	
+	<!-- 批量删除 -->
+	<delete id="deleteAll" parameterType="String">
+		delete from
+		<include refid="tableName"></include>
+		where 
+			COLUMNS_ID in
+		<foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+                 #{item}
+		</foreach>
+	</delete>
+	
+	<update id="addColumn" parameterType="pd">
+	    <![CDATA[
+	    alter table `${SCHEMA}`.`${TABLE_NAME_EN}` add ${COLUMN_NAME_EN} ${COLUMN_TYPE};
+	    ]]>
+	</update>
+	<update id="dropColumn" parameterType="pd">
+	    <![CDATA[
+	    alter table `${SCHEMA}`.`${TABLE_NAME_EN}` drop ${COLUMN_NAME_EN};
+	    ]]>
+	</update>
+	<update id="changeColumn" parameterType="pd">
+	    <![CDATA[
+	    alter table `${SCHEMA}`.`${TABLE_NAME_EN}` change ${COLUMN_NAME_EN_OLD} ${COLUMN_NAME_EN_NEW} ${COLUMN_TYPE_NEW};
+	    ]]>
+	</update>
+	<update id="modifyColumn" parameterType="pd">
+	    <![CDATA[
+	    alter table `${SCHEMA}`.`${TABLE_NAME_EN}` modify ${COLUMN_NAME_EN} ${COLUMN_TYPE_NEW};
+	    ]]>
+	</update>
+</mapper>

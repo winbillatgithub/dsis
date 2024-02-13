@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="DepartmentMapper">
+
+	<resultMap type="Department" id="departmentResultMap">
+		<id column="CORP_ID" property="CORP_ID"/>
+		<result column="NAME" property="NAME"/>
+		<result column="PARENT_ID" property="PARENT_ID"/>
+	</resultMap>
+
+	<!--表名 -->
+	<sql id="tableName">
+		SYS_CORP
+	</sql>
+
+	<!-- 字段 -->
+	<sql id="Field">
+		NAME,
+		NAME_EN,
+		BIANMA,
+		PARENT_ID,
+		HEADMAN,
+		TEL,
+		FUNCTIONS,
+		ADDRESS,
+		BZ,
+		STOP,
+		STATUS,
+		CREATE_DATE,
+		MODIFY_DATE,
+		OPERATOR,
+		CORP_ID
+	</sql>
+
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{NAME},	
+		#{NAME_EN},	
+		#{BIANMA},	
+		#{PARENT_ID},
+		#{HEADMAN},
+		#{TEL},
+		#{FUNCTIONS},
+		#{ADDRESS},
+		#{BZ},
+		#{STOP},
+		#{STATUS},
+		#{CREATE_DATE},	
+		#{MODIFY_DATE},	
+		#{OPERATOR},	
+		#{CORP_ID}
+	</sql>
+
+	<!-- 新增-->
+	<insert id="save" parameterType="pd">
+		insert into 
+	<include refid="tableName"></include>
+		(
+	<include refid="Field"></include>
+		) values (
+	<include refid="FieldValue"></include>
+		)
+	</insert>
+
+	<!-- 删除-->
+	<delete id="delete" parameterType="pd">
+		delete from
+		<include refid="tableName"></include>
+		where 
+			CORP_ID = #{CORP_ID}
+	</delete>
+
+	<!-- 修改 -->
+	<update id="edit" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+		set 
+			NAME = #{NAME},
+			NAME_EN = #{NAME_EN},
+			HEADMAN = #{HEADMAN},
+			BZ = #{BZ},
+			TEL = #{TEL},
+			FUNCTIONS = #{FUNCTIONS},
+			ADDRESS = #{ADDRESS},
+            STATUS = #{STATUS},
+			CORP_ID = CORP_ID
+		where 
+		CORP_ID = #{CORP_ID}
+	</update>
+
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="pd" resultType="pd">
+		select 
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 
+			CORP_ID = #{CORP_ID}
+	</select>
+
+	<!-- 通过ID获取父节点 -->
+	<select id="findParentById" parameterType="pd" resultMap="departmentResultMap">
+		select 
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 
+			CORP_ID = (SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{CORP_ID})
+	</select>
+
+	<!-- 通过编码获取数据 -->
+	<select id="findByBianma" parameterType="pd" resultType="pd">
+		select 
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 1=1
+		<if test='CORP_ID != null and CORP_ID == "0" '>
+			and CORP_ID IN (
+				SELECT m.CORP_ID FROM SYS_CORP m WHERE m.CORP_ID = #{CORP_ID}
+				UNION ALL
+				SELECT CORP_ID FROM SYS_CORP WHERE PARENT_ID = #{CORP_ID}
+			)
+		</if>
+		<if test='CORP_ID != null and CORP_ID != "0" '>
+			and CORP_ID IN (
+				SELECT m.CORP_ID FROM SYS_CORP m WHERE m.CORP_ID = #{CORP_ID}
+				UNION ALL
+				SELECT CORP_ID FROM SYS_CORP WHERE PARENT_ID = #{CORP_ID}
+				UNION ALL
+				SELECT CORP_ID FROM SYS_CORP WHERE PARENT_ID IN (
+				SELECT CORP_ID FROM SYS_CORP WHERE PARENT_ID = #{CORP_ID}
+				)
+				UNION ALL
+				SELECT CORP_ID FROM SYS_CORP WHERE PARENT_ID IN (
+				SELECT CORP_ID FROM SYS_CORP WHERE PARENT_ID IN (
+				SELECT CORP_ID FROM SYS_CORP WHERE PARENT_ID = #{CORP_ID}
+				))
+			)
+		</if>
+		AND BIANMA = #{BIANMA}
+	</select>
+
+	<!-- 列表 父查看子 向下递归 -->
+	<select id="datalistPage" parameterType="page" resultType="pd">
+		select
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where
+			1=1
+		<if test="pd.CORP_ID != null and pd.CORP_ID != ''">
+			and CORP_ID IN (
+				SELECT m.CORP_ID FROM SYS_CORP m WHERE m.CORP_ID = #{pd.CORP_ID}
+				UNION ALL
+				SELECT CORP_ID FROM SYS_CORP WHERE PARENT_ID = #{pd.CORP_ID}
+				UNION ALL
+				SELECT CORP_ID FROM SYS_CORP WHERE PARENT_ID IN (
+				SELECT CORP_ID FROM SYS_CORP WHERE PARENT_ID = #{pd.CORP_ID}
+				)
+				UNION ALL
+				SELECT CORP_ID FROM SYS_CORP WHERE PARENT_ID IN (
+				SELECT CORP_ID FROM SYS_CORP WHERE PARENT_ID IN (
+				SELECT CORP_ID FROM SYS_CORP WHERE PARENT_ID = #{pd.CORP_ID}
+				))
+			)
+		</if>
+		<!-- <if test="pd.CORP_ID!= null and pd.CORP_ID != ''">检索
+		and PARENT_ID = #{pd.CORP_ID}
+		</if> -->
+		<if test="pd.keywords != null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+				(
+				 NAME LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+				 or 
+				 NAME_EN LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') 
+				 or
+				 BIANMA LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+				)
+		</if>
+		order by NAME
+	</select>
+
+	<!-- 列表 只查看当前层级的子公司列表 -->
+	<select id="datalistSubDepartmentPage" parameterType="page" resultType="pd">
+		select
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where
+			1=1
+		<if test="pd.CORP_ID!= null and pd.CORP_ID != ''">
+		and PARENT_ID = #{pd.CORP_ID}
+		</if>
+		<if test="pd.keywords != null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+				(
+				 NAME LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+				 or 
+				 NAME_EN LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') 
+				 or
+				 BIANMA LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+				)
+		</if>
+		order by sort_no
+	</select>
+
+	<!-- 列表 查看当前层级的所有子公司列表 -->
+	<select id="listAllDepartment" parameterType="pd" resultMap="departmentResultMap">
+		select
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where
+			1=1
+		<if test="CORP_ID != null and CORP_ID != ''">
+			and CORP_ID IN (
+				SELECT m.CORP_ID FROM SYS_CORP m WHERE m.CORP_ID = #{CORP_ID}
+				UNION ALL
+				SELECT CORP_ID FROM SYS_CORP WHERE PARENT_ID = #{CORP_ID}
+				UNION ALL
+				SELECT CORP_ID FROM SYS_CORP WHERE PARENT_ID IN (
+				SELECT CORP_ID FROM SYS_CORP WHERE PARENT_ID = #{CORP_ID}
+				)
+				UNION ALL
+				SELECT CORP_ID FROM SYS_CORP WHERE PARENT_ID IN (
+				SELECT CORP_ID FROM SYS_CORP WHERE PARENT_ID IN (
+				SELECT CORP_ID FROM SYS_CORP WHERE PARENT_ID = #{CORP_ID}
+				))
+			)
+		</if>
+		order by sort_no
+	</select>
+	
+	<!-- 列表 子查看父 向上递归 -->
+	<select id="datalistPageUp" parameterType="page" resultType="pd">
+		select
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where
+			1=1
+		<if test="pd.CORP_ID != null and pd.CORP_ID != ''">
+			and CORP_ID IN (
+				SELECT CORP_ID FROM SYS_CORP m WHERE CORP_ID = #{pd.CORP_ID}
+				UNION ALL
+				SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (
+				SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{pd.CORP_ID}
+				)
+				UNION ALL
+				SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (
+				SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (
+				SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{pd.CORP_ID}
+				))
+				UNION ALL
+				SELECT CORP_ID FROM SYS_CORP WHERE CORP_ID = (
+				SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (
+				SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = (
+				SELECT PARENT_ID FROM SYS_CORP WHERE CORP_ID = #{pd.CORP_ID}
+				)))
+			)
+		</if>
+		<!-- <if test="pd.CORP_ID!= null and pd.CORP_ID != ''">检索
+		and PARENT_ID = #{pd.CORP_ID}
+		</if> -->
+		<if test="pd.keywords != null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+				(
+				 NAME LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+				 or 
+				 NAME_EN LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') 
+				 or
+				 BIANMA LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+				)
+		</if>
+		order by NAME
+	</select>
+
+	<!-- 通过ID获取其子级列表 -->
+	<select id="listSubDepartmentByParentId" parameterType="String" resultMap="departmentResultMap">
+		select 
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 1=1
+		<if test="_parameter != null and _parameter != ''"><!-- 检索 -->
+			and PARENT_ID = #{_parameter}
+		</if>
+		order by sort_no
+	</select>
+
+	<update id="createDatabase" parameterType="pd">
+	    <![CDATA[
+	    CREATE DATABASE IF NOT EXISTS `${DATABASE_NAME}` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
+	    ]]>
+	</update>
+	<update id="dropDatabase" parameterType="pd">
+	    <![CDATA[
+	    DROP DATABASE `${DATABASE_NAME}`;
+	    ]]>
+	</update>
+    <update id="createLogTable" parameterType="pd">
+        <![CDATA[
+	    CREATE TABLE `${SCHEMA}`.`${TABLE_NAME_EN}` (`LOGS_ID` VARCHAR(100) NOT NULL, `OPT_TYPE` VARCHAR(1), `LOG_LEVEL` VARCHAR(1),
+	    `CORP_ID` VARCHAR(100), `SERVICE_NAME` VARCHAR(100), `MODULE_NAME` VARCHAR(100), `REMARK` VARCHAR(255),
+	    `OPERATOR` VARCHAR(100), `CREATE_TIME` DATETIME, `UPDATE_TIME` DATETIME,
+	    PRIMARY KEY (`LOGS_ID`))
+	    ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	    ]]>
+    </update>
+</mapper>
